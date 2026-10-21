@@ -1,0 +1,638 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>화명 메타버스</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Press+Start+2P&display=swap">
+<style>
+  /* Layout: a dark arcade hall. Neon marquee on top, two rows of cabinets (game zone / quiz zone), CRT scanlines over everything. Single deliberate dark theme. */
+  :root {
+    --bg: #090618;
+    --hall: #120d2e;
+    --cab: #1b1446;
+    --cab-edge: #2c2370;
+    --screen: #050312;
+    --fg: #f6f1ff;
+    --muted: #b7acdc;
+    --pink: #ff2d95;
+    --cyan: #28e8ff;
+    --yellow: #ffe14d;
+    --lime: #7dff6a;
+    --font-display: 'Jua', 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+    --font-arcade: 'Press Start 2P', 'Courier New', monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { height: 100%; }
+  body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-display);
+    font-size: 17px;
+    line-height: 1.4;
+    overflow-x: hidden;
+    position: relative;
+  }
+  a { color: inherit; }
+
+  /* starfield canvas */
+  #stars { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+
+  /* CRT scanlines */
+  body::after {
+    content: ""; position: fixed; inset: 0; z-index: 5; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 2px, transparent 2px 4px);
+    mix-blend-mode: multiply;
+  }
+
+  .hall {
+    position: relative; z-index: 1;
+    max-width: 1120px; margin: 0 auto;
+    padding-block: 20px 48px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: grid; gap: 36px;
+  }
+
+  /* ---------- marquee ---------- */
+  .marquee {
+    position: relative;
+    border: 4px solid var(--cab-edge);
+    border-radius: 22px;
+    background: linear-gradient(180deg, #1a1248, #0f0a2c);
+    padding: 26px 20px 22px;
+    text-align: center;
+    overflow: hidden;
+    box-shadow: 0 0 0 3px #090618, 0 0 30px rgba(255,45,149,.25), inset 0 0 60px rgba(40,232,255,.08);
+  }
+  .bulbs {
+    position: absolute; left: 0; right: 0; height: 10px; display: flex; justify-content: space-around; padding: 0 10px;
+  }
+  .bulbs.top { top: 6px; } .bulbs.bottom { bottom: 6px; }
+  .bulbs i {
+    width: 10px; height: 10px; border-radius: 50%; background: var(--yellow);
+    box-shadow: 0 0 8px var(--yellow); animation: blink 1s steps(2) infinite;
+  }
+  .bulbs i:nth-child(even) { animation-delay: .5s; background: var(--pink); box-shadow: 0 0 8px var(--pink); }
+  @keyframes blink { 50% { opacity: .25; } }
+
+  .eyebrow {
+    font-family: var(--font-arcade); font-size: 11px; letter-spacing: .12em;
+    color: var(--cyan); text-shadow: 0 0 8px var(--cyan); margin: 0 0 14px;
+  }
+  .marquee h1 {
+    margin: 0; font-size: clamp(44px, 9vw, 92px); line-height: 1; letter-spacing: .02em;
+    text-wrap: balance;
+    color: #fff;
+    text-shadow:
+      0 0 6px #fff, 0 0 18px var(--pink), 0 0 40px var(--pink), 0 0 70px var(--pink),
+      4px 4px 0 #6a0b3f;
+    animation: neon 3s ease-in-out infinite alternate;
+  }
+  @keyframes neon { to { text-shadow: 0 0 4px #fff, 0 0 14px var(--pink), 0 0 30px var(--pink), 0 0 50px var(--pink), 4px 4px 0 #6a0b3f; } }
+  .marquee p.sub { margin: 14px 0 0; font-size: 20px; color: var(--muted); }
+  .press {
+    margin-top: 16px; font-family: var(--font-arcade); font-size: 12px; color: var(--yellow);
+    text-shadow: 0 0 10px var(--yellow); animation: blink 1.2s steps(2) infinite;
+  }
+
+  /* ---------- score bar ---------- */
+  .scorebar {
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 18px;
+    font-family: var(--font-arcade); font-size: 10px; letter-spacing: .06em; color: var(--muted);
+    padding: 0 6px;
+  }
+  .scorebar b { color: var(--yellow); font-weight: normal; font-variant-numeric: tabular-nums; }
+  .scorebar button {
+    font: inherit; color: var(--cyan); background: none; border: 2px solid var(--cab-edge); border-radius: 8px;
+    padding: 6px 10px; cursor: pointer;
+  }
+  .scorebar button:hover, .scorebar button:focus-visible { border-color: var(--cyan); outline: none; }
+
+  /* ---------- zones ---------- */
+  .zone { display: grid; gap: 18px; }
+  .zone-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .zone-head h2 {
+    margin: 0; font-size: clamp(26px, 4vw, 36px); letter-spacing: .02em;
+  }
+  .zone-head .tag {
+    font-family: var(--font-arcade); font-size: 10px; padding: 7px 10px; border-radius: 6px;
+    color: #090618; background: var(--cyan); box-shadow: 0 0 14px var(--cyan);
+  }
+  .zone.quiz .zone-head .tag { background: var(--yellow); box-shadow: 0 0 14px var(--yellow); }
+  .zone-head .line { flex: 1 1 40px; height: 3px; background: repeating-linear-gradient(90deg, var(--cab-edge) 0 12px, transparent 12px 20px); }
+  .zone-head p { margin: 0; flex-basis: 100%; color: var(--muted); font-size: 16px; }
+
+  .cabinets {
+    display: grid; gap: 22px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .zone.quiz .cabinets { max-width: 760px; }
+  @media (min-width: 720px) { .zone.games .cabinets { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (min-width: 1080px) {
+    .zone.games .cabinets { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+    .zone.games .cab h3 { font-size: 20px; }
+    .zone.games .btn { padding: 12px 8px; }
+  }
+  @media (max-width: 560px) { .cabinets { grid-template-columns: minmax(0, 1fr); } }
+
+  /* ---------- one cabinet ---------- */
+  .cab {
+    position: relative;
+    display: grid; grid-template-rows: auto 1fr auto; gap: 12px;
+    background: linear-gradient(180deg, var(--cab), #140f38);
+    border: 4px solid var(--cab-edge);
+    border-radius: 18px 18px 12px 12px;
+    padding: 12px 12px 14px;
+    box-shadow: 0 10px 0 #0a0720, 0 14px 30px rgba(0,0,0,.6);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    min-width: 0;
+  }
+  .cab:hover, .cab:focus-within {
+    transform: translateY(-6px);
+    border-color: var(--accent);
+    box-shadow: 0 16px 0 #0a0720, 0 22px 40px rgba(0,0,0,.6), 0 0 26px color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+  .cab.c1 { --accent: var(--pink); }
+  .cab.c2 { --accent: var(--cyan); }
+  .cab.c3 { --accent: var(--lime); }
+  .cab.c4 { --accent: #ff9f1c; }
+  .cab.c5 { --accent: #5ea8ff; }
+  .cab.q1 { --accent: var(--yellow); }
+  .cab.q2 { --accent: #c77dff; }
+
+  .cab .topper {
+    font-family: var(--font-arcade); font-size: 9px; letter-spacing: .08em; text-align: center;
+    color: var(--accent); text-shadow: 0 0 8px var(--accent); padding: 4px 0 0;
+  }
+  .screen {
+    position: relative;
+    background: var(--screen);
+    border: 3px solid #000; border-radius: 10px;
+    aspect-ratio: 4 / 3; max-width: 100%;
+    display: grid; place-items: center;
+    overflow: hidden;
+    box-shadow: inset 0 0 30px color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  .screen::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.65));
+    pointer-events: none;
+  }
+  .screen canvas { image-rendering: pixelated; width: 72%; height: auto; }
+  .screen .hi {
+    position: absolute; top: 8px; left: 10px; right: 10px; display: flex; justify-content: space-between;
+    font-family: var(--font-arcade); font-size: 8px; color: var(--accent); opacity: .9;
+  }
+  .cab h3 { margin: 0; font-size: 24px; line-height: 1.15; text-wrap: balance; }
+  .cab .maker { margin: 2px 0 0; color: var(--muted); font-size: 15px; }
+  .cab .maker b { color: var(--fg); font-weight: normal; }
+  .cab .info { display: grid; gap: 2px; min-width: 0; }
+
+  .controls { display: flex; align-items: center; gap: 10px; }
+  .joy {
+    flex: none; width: 30px; height: 30px; border-radius: 50%; position: relative;
+    background: radial-gradient(circle at 35% 35%, #ff6fb7, #a30b57);
+    box-shadow: 0 3px 0 #4a0427;
+  }
+  .joy::after { content: ""; position: absolute; left: 12px; bottom: -8px; width: 6px; height: 12px; background: #333; border-radius: 2px; }
+  .btn {
+    flex: 1 1 auto; min-width: 0;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: var(--font-arcade); font-size: 11px; line-height: 1.3; text-decoration: none; text-align: center;
+    color: #090618; background: var(--accent);
+    padding: 14px 10px; border-radius: 10px; border: 0;
+    box-shadow: 0 5px 0 color-mix(in srgb, var(--accent) 45%, #000);
+    transition: transform .08s ease, box-shadow .08s ease, filter .15s ease;
+    cursor: pointer;
+  }
+  .btn:hover { filter: brightness(1.12); }
+  .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 45%, #000); }
+  .btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  .btn .ko { font-family: var(--font-display); font-size: 17px; }
+
+  .code {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    font-size: 15px; color: var(--muted);
+  }
+  .code .num {
+    font-family: var(--font-arcade); font-size: 14px; color: var(--yellow); letter-spacing: .1em;
+    background: #000; border: 2px solid var(--cab-edge); border-radius: 6px; padding: 6px 10px;
+  }
+  .code button {
+    font: inherit; font-size: 14px; color: var(--fg); background: var(--cab-edge); border: 0; border-radius: 6px;
+    padding: 6px 10px; cursor: pointer;
+  }
+  .code button:hover, .code button:focus-visible { background: #3a2f8f; outline: none; }
+
+  /* ---------- how to ---------- */
+  .howto {
+    border: 3px dashed var(--cab-edge); border-radius: 14px; padding: 18px 20px;
+    display: grid; gap: 8px; color: var(--muted); font-size: 16px;
+  }
+  .howto h2 { margin: 0; font-size: 22px; color: var(--fg); }
+  .howto ol { margin: 0; padding-left: 22px; display: grid; gap: 4px; }
+  .howto li::marker { color: var(--yellow); font-family: var(--font-arcade); font-size: 11px; }
+
+  footer {
+    text-align: center; font-family: var(--font-arcade); font-size: 9px; letter-spacing: .1em;
+    color: var(--muted); opacity: .8;
+  }
+
+  @media (max-width: 420px) {
+    .marquee { padding: 24px 12px 20px; }
+    .cab h3 { font-size: 22px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bulbs i, .press, .marquee h1 { animation: none; }
+    .cab, .btn { transition: none; }
+  }
+</style>
+
+<canvas id="stars" aria-hidden="true"></canvas>
+
+<main class="hall">
+
+  <header class="marquee">
+    <div class="bulbs top" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <p class="eyebrow">WELCOME TO</p>
+    <h1>화명 메타버스</h1>
+    <p class="sub">친구들이 직접 만든 게임 5개와 퀴즈 2개가 기다리고 있어요</p>
+    <p class="press">▶ PRESS START ◀</p>
+    <div class="bulbs bottom" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  </header>
+
+  <div class="scorebar">
+    <span>GAMES <b>5</b> &nbsp; QUIZ <b>2</b></span>
+    <button type="button" id="sound" aria-pressed="false">SOUND: OFF</button>
+  </div>
+
+  <!-- ===== 엔트리 게임존 ===== -->
+  <section class="zone games" aria-labelledby="h-games">
+    <div class="zone-head">
+      <span class="tag">ZONE 1</span>
+      <h2 id="h-games">엔트리 게임존</h2>
+      <span class="line" aria-hidden="true"></span>
+      <p>엔트리(playentry.org)에서 바로 열려요. 게임이 열리면 ▶ 버튼을 눌러 시작하세요.</p>
+    </div>
+
+    <div class="cabinets">
+      <article class="cab c1">
+        <div class="topper">SHOOTING</div>
+        <div class="screen">
+          <div class="hi"><span>1UP</span><span>HI 9999</span></div>
+          <canvas data-sprite="ship" width="16" height="16" aria-hidden="true"></canvas>
+        </div>
+        <div class="info">
+          <h3>엔트리 슈팅게임</h3>
+          <p class="maker">만든 사람 <b>변우빈</b></p>
+        </div>
+        <div class="controls">
+          <span class="joy" aria-hidden="true"></span>
+          <a class="btn launch" href="https://playentry.org/project/6ad05a95cff3d23af429dc99" target="_blank" rel="noopener">▶ <span class="ko">게임 시작</span></a>
+        </div>
+      </article>
+
+      <article class="cab c2">
+        <div class="topper">OBSTACLE RUN</div>
+        <div class="screen">
+          <div class="hi"><span>1UP</span><span>HI 9999</span></div>
+          <canvas data-sprite="runner" width="16" height="16" aria-hidden="true"></canvas>
+        </div>
+        <div class="info">
+          <h3>장애물 게임</h3>
+          <p class="maker">만든 사람 <b>박건희</b></p>
+        </div>
+        <div class="controls">
+          <span class="joy" aria-hidden="true"></span>
+          <a class="btn launch" href="https://playentry.org/project/6aa7c46e5183a25f173ba882" target="_blank" rel="noopener">▶ <span class="ko">게임 시작</span></a>
+        </div>
+      </article>
+
+      <article class="cab c3">
+        <div class="topper">MYSTERY</div>
+        <div class="screen">
+          <div class="hi"><span>1UP</span><span>HI ????</span></div>
+          <canvas data-sprite="mystery" width="16" height="16" aria-hidden="true"></canvas>
+        </div>
+        <div class="info">
+          <h3>비밀의 게임</h3>
+          <p class="maker">만든 사람 <b>김하진</b></p>
+        </div>
+        <div class="controls">
+          <span class="joy" aria-hidden="true"></span>
+          <a class="btn launch" href="https://playentry.org/project/6ac71f521b3bd80842376941" target="_blank" rel="noopener">▶ <span class="ko">게임 시작</span></a>
+        </div>
+      </article>
+
+      <article class="cab c4">
+        <div class="topper">OBSTACLE RUN</div>
+        <div class="screen">
+          <div class="hi"><span>1UP</span><span>HI 9999</span></div>
+          <canvas data-sprite="spike" width="16" height="16" aria-hidden="true"></canvas>
+        </div>
+        <div class="info">
+          <h3>엔트리 장애물 게임</h3>
+          <p class="maker">만든 사람 <b>표민준</b></p>
+        </div>
+        <div class="controls">
+          <span class="joy" aria-hidden="true"></span>
+          <a class="btn launch" href="https://playentry.org/project/6ad05c4094d178ac5481954d" target="_blank" rel="noopener">▶ <span class="ko">게임 시작</span></a>
+        </div>
+      </article>
+
+      <article class="cab c5">
+        <div class="topper">SHOOTING</div>
+        <div class="screen">
+          <div class="hi"><span>1UP</span><span>HI 9999</span></div>
+          <canvas data-sprite="ship2" width="16" height="16" aria-hidden="true"></canvas>
+        </div>
+        <div class="info">
+          <h3>엔트리 슈팅게임</h3>
+          <p class="maker">만든 사람 <b>남예준</b></p>
+        </div>
+        <div class="controls">
+          <span class="joy" aria-hidden="true"></span>
+          <a class="btn launch" href="https://playentry.org/project/6ad05a6a661ddc50e3718016" target="_blank" rel="noopener">▶ <span class="ko">게임 시작</span></a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ===== 젭 퀴즈존 ===== -->
+  <section class="zone quiz" aria-labelledby="h-quiz">
+    <div class="zone-head">
+      <span class="tag">ZONE 2</span>
+      <h2 id="h-quiz">젭 퀴즈존</h2>
+      <span class="line" aria-hidden="true"></span>
+      <p>젭(ZEP)에서 열려요. 닉네임을 정하고 들어가면 퀴즈가 시작돼요.</p>
+    </div>
+
+    <div class="cabinets">
+      <article class="cab q1">
+        <div class="topper">ZEP QUIZ</div>
+        <div class="screen">
+          <div class="hi"><span>QUIZ</span><span>READY?</span></div>
+          <canvas data-sprite="food" width="16" height="16" aria-hidden="true"></canvas>
+        </div>
+        <div class="info">
+          <h3>음식 퀴즈</h3>
+          <p class="maker">만든 사람 <b>스정우</b></p>
+        </div>
+        <div class="controls">
+          <span class="joy" aria-hidden="true"></span>
+          <a class="btn launch" href="https://quiz.zep.us/play/rb7pld" target="_blank" rel="noopener">▶ <span class="ko">퀴즈 시작</span></a>
+        </div>
+      </article>
+
+      <article class="cab q2">
+        <div class="topper">ZEP SPACE</div>
+        <div class="screen">
+          <div class="hi"><span>QUIZ</span><span>CODE 46</span></div>
+          <canvas data-sprite="question" width="16" height="16" aria-hidden="true"></canvas>
+        </div>
+        <div class="info">
+          <h3>퀴즈를 풀어라!</h3>
+          <p class="maker">만든 사람 <b>정세윤</b></p>
+          <div class="code">입장 코드 <span class="num" id="zep-code">46</span> <button type="button" id="copy-code">복사</button></div>
+        </div>
+        <div class="controls">
+          <span class="joy" aria-hidden="true"></span>
+          <a class="btn launch" href="https://zep.us/play/7nL0RO" target="_blank" rel="noopener">▶ <span class="ko">입장하기</span></a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="howto" aria-labelledby="h-how">
+    <h2 id="h-how">이용 방법</h2>
+    <ol>
+      <li>하고 싶은 게임이나 퀴즈의 <b>게임 시작</b> 버튼을 눌러요. 새 창에서 열려요.</li>
+      <li>엔트리 게임은 화면 위의 ▶(시작하기) 버튼을 누르면 시작돼요.</li>
+      <li>젭 퀴즈는 닉네임을 적고 들어가요. '퀴즈를 풀어라!'는 입장 코드 <b>46</b>을 물어보면 입력해요.</li>
+      <li>다 하면 이 창으로 돌아와서 다른 게임도 구경해 보세요.</li>
+    </ol>
+  </section>
+
+  <footer>HWAMYEONG METAVERSE ARCADE · MADE BY STUDENTS</footer>
+</main>
+
+<script>
+(function () {
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- starfield ---- */
+  var sc = document.getElementById('stars'), sx = sc.getContext('2d'), stars = [];
+  function sizeStars() {
+    sc.width = window.innerWidth; sc.height = window.innerHeight;
+    stars = [];
+    for (var i = 0; i < 140; i++) stars.push({ x: Math.random() * sc.width, y: Math.random() * sc.height, s: Math.random() * 2 + 1, v: Math.random() * .4 + .1 });
+  }
+  function drawStars() {
+    sx.clearRect(0, 0, sc.width, sc.height);
+    for (var i = 0; i < stars.length; i++) {
+      var st = stars[i];
+      sx.fillStyle = i % 7 === 0 ? '#ff2d95' : (i % 5 === 0 ? '#28e8ff' : '#ffffff');
+      sx.globalAlpha = .35 + st.s * .2;
+      sx.fillRect(st.x, st.y, st.s, st.s);
+      if (!reduce) { st.y += st.v; if (st.y > sc.height) { st.y = -2; st.x = Math.random() * sc.width; } }
+    }
+    sx.globalAlpha = 1;
+    if (!reduce) requestAnimationFrame(drawStars);
+  }
+  sizeStars(); drawStars();
+  window.addEventListener('resize', function () { sizeStars(); if (reduce) drawStars(); });
+
+  /* ---- pixel sprites (16x16, letters map to colors) ---- */
+  var P = { '.': null, w: '#ffffff', p: '#ff2d95', c: '#28e8ff', y: '#ffe14d', g: '#7dff6a', o: '#ff9f1c', v: '#c77dff', r: '#ff4d4d', b: '#3b2fbf', k: '#1a1a1a', n: '#8b5a2b' };
+  var S = {
+    ship: [
+      '.......ww.......',
+      '.......ww.......',
+      '......wccw......',
+      '......wccw......',
+      '.....wccccw.....',
+      '.....wccccw.....',
+      '..w..wcppcw..w..',
+      '..w.wwcppcww.w..',
+      '.ww.wccccccw.ww.',
+      '.wwwwccccccwwww.',
+      'wwcccccccccccccw',
+      'wwcccwwccwwcccww',
+      '.ww.wwww.wwww.ww',
+      '....oo....oo....',
+      '....yy....yy....',
+      '.....y....y.....'
+    ],
+    ship2: [
+      '.......pp.......',
+      '......pyyp......',
+      '......pyyp......',
+      '.....pyyyyp.....',
+      '.....pyccyp.....',
+      '.b...pyccyp...b.',
+      '.b..ppyyyypp..b.',
+      '.bb.pyyyyyyp.bb.',
+      '.bbppyyyyyyppbb.',
+      'bbbpyyyyyyyypbbb',
+      'bbpyyyppppyyypbb',
+      'bbpyypp..ppyypbb',
+      '.bbpp......ppbb.',
+      '...oo......oo...',
+      '...rr......rr...',
+      '....r......r....'
+    ],
+    runner: [
+      '......oooo......',
+      '.....oooooo.....',
+      '.....okkook.....',
+      '.....oooooo.....',
+      '......oooo......',
+      '....ccccccc.....',
+      '...cccccccccc...',
+      '..cc.cccccc.cc..',
+      '..cc.cccccc..cc.',
+      '.....cccccc.....',
+      '.....bbbbbb.....',
+      '....bbb..bbb....',
+      '...bbb....bbb...',
+      '..bbb......bbb..',
+      '..kkk......kkk..',
+      '.kkkk......kkkk.'
+    ],
+    mystery: [
+      '.....gggggg.....',
+      '...gggggggggg...',
+      '..ggg......ggg..',
+      '..gg........gg..',
+      '.............gg.',
+      '............ggg.',
+      '...........ggg..',
+      '..........ggg...',
+      '.........ggg....',
+      '........ggg.....',
+      '........gg......',
+      '........gg......',
+      '................',
+      '........gg......',
+      '........gg......',
+      '................'
+    ],
+    spike: [
+      '................',
+      '....oo..........',
+      '...oooo.........',
+      '...okko.........',
+      '...oooo....rr...',
+      '....oo.....rr...',
+      '..yyyyyy..rrrr..',
+      '.yyyyyyyy.rrrr..',
+      '.yy.yy.yyrrrrrr.',
+      '....yy...rrrrrr.',
+      '...yyyy.rrrrrrrr',
+      '...y..y.rrrrrrrr',
+      '..yy..yy........',
+      'kkkkkkkkkkkkkkkk',
+      'kkkkkkkkkkkkkkkk',
+      'kkkkkkkkkkkkkkkk'
+    ],
+    food: [
+      '......rrrr......',
+      '....rrrrrrrr....',
+      '...rrrrrrrrrr...',
+      '..nnnnnnnnnnnn..',
+      '.nnnnnnnnnnnnnn.',
+      '.nnnnnnnnnnnnnn.',
+      '..gggggggggggg..',
+      '.gggggggggggggg.',
+      '..rrrrrrrrrrrr..',
+      '.yyyyyyyyyyyyyy.',
+      '.yyyyyyyyyyyyyy.',
+      '..nnnnnnnnnnnn..',
+      '..nnnnnnnnnnnn..',
+      '...nnnnnnnnnn...',
+      '....nnnnnnnn....',
+      '................'
+    ],
+    question: [
+      'yyyyyyyyyyyyyyyy',
+      'ykkkkkkkkkkkkkky',
+      'ykkkkkvvvvkkkkky',
+      'ykkkvvvvvvvvkkky',
+      'ykkvvvkkkkvvvkky',
+      'ykkvvkkkkkkvvkky',
+      'ykkkkkkkkkvvvkky',
+      'ykkkkkkkkvvvkkky',
+      'ykkkkkkkvvvkkkky',
+      'ykkkkkkvvvkkkkky',
+      'ykkkkkkvvkkkkkky',
+      'ykkkkkkkkkkkkkky',
+      'ykkkkkkvvkkkkkky',
+      'ykkkkkkvvkkkkkky',
+      'ykkkkkkkkkkkkkky',
+      'yyyyyyyyyyyyyyyy'
+    ]
+  };
+  var sprites = document.querySelectorAll('canvas[data-sprite]');
+  for (var i = 0; i < sprites.length; i++) {
+    var cv = sprites[i], g = cv.getContext('2d'), rows = S[cv.getAttribute('data-sprite')];
+    if (!rows) continue;
+    for (var y = 0; y < 16; y++) for (var x = 0; x < 16; x++) {
+      var col = P[rows[y][x]]; if (!col) continue;
+      g.fillStyle = col; g.fillRect(x, y, 1, 1);
+    }
+  }
+  /* bob the sprites gently */
+  if (!reduce) {
+    var t = 0;
+    (function bob() {
+      t += 0.05;
+      for (var j = 0; j < sprites.length; j++) sprites[j].style.transform = 'translateY(' + (Math.sin(t + j) * 5) + 'px)';
+      requestAnimationFrame(bob);
+    })();
+  }
+
+  /* ---- sound (WebAudio bleeps, off by default) ---- */
+  var soundOn = false, ac = null, soundBtn = document.getElementById('sound');
+  function beep(freq, dur, type) {
+    if (!soundOn) return;
+    try {
+      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+      var o = ac.createOscillator(), gn = ac.createGain();
+      o.type = type || 'square'; o.frequency.value = freq;
+      gn.gain.setValueAtTime(.08, ac.currentTime);
+      gn.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + dur);
+      o.connect(gn); gn.connect(ac.destination); o.start(); o.stop(ac.currentTime + dur);
+    } catch (e) {}
+  }
+  function coinSound() { beep(988, .1); setTimeout(function () { beep(1319, .3); }, 90); }
+  soundBtn.addEventListener('click', function () {
+    soundOn = !soundOn;
+    soundBtn.textContent = 'SOUND: ' + (soundOn ? 'ON' : 'OFF');
+    soundBtn.setAttribute('aria-pressed', String(soundOn));
+    if (soundOn) coinSound();
+  });
+
+  var launches = document.querySelectorAll('.launch');
+  for (var k = 0; k < launches.length; k++) {
+    launches[k].addEventListener('click', coinSound);
+    launches[k].addEventListener('mouseenter', function () { beep(440, .05, 'triangle'); });
+  }
+
+  /* ---- copy entry code ---- */
+  var copyBtn = document.getElementById('copy-code'), codeEl = document.getElementById('zep-code');
+  copyBtn.addEventListener('click', function () {
+    var done = function () { copyBtn.textContent = '복사됨!'; setTimeout(function () { copyBtn.textContent = '복사'; }, 1500); };
+    var fallback = function () {
+      var r = document.createRange(); r.selectNodeContents(codeEl);
+      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      copyBtn.textContent = '드래그해서 복사';
+      setTimeout(function () { copyBtn.textContent = '복사'; }, 2000);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText('46').then(done, fallback);
+    } else fallback();
+  });
+})();
+</script>
