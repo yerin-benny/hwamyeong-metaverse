@@ -129,12 +129,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .zone.quiz .cabinets { max-width: 760px; }
-  @media (min-width: 720px) { .zone.games .cabinets { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-  @media (min-width: 1080px) {
-    .zone.games .cabinets { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
-    .zone.games .cab h3 { font-size: 20px; }
-    .zone.games .btn { padding: 12px 8px; }
-  }
+  @media (min-width: 1000px) { .zone.games .cabinets { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
   @media (max-width: 560px) { .cabinets { grid-template-columns: minmax(0, 1fr); } }
 
   /* ---------- one cabinet ---------- */
@@ -158,7 +153,6 @@
   .cab.c2 { --accent: var(--cyan); }
   .cab.c3 { --accent: var(--lime); }
   .cab.c4 { --accent: #ff9f1c; }
-  .cab.c5 { --accent: #5ea8ff; }
   .cab.q1 { --accent: var(--yellow); }
   .cab.q2 { --accent: #c77dff; }
 
@@ -258,13 +252,13 @@
     <div class="bulbs top" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     <p class="eyebrow">WELCOME TO</p>
     <h1>화명 메타버스</h1>
-    <p class="sub">친구들이 직접 만든 게임 5개와 퀴즈 2개가 기다리고 있어요</p>
+    <p class="sub">친구들이 직접 만든 게임 4개와 퀴즈 2개가 기다리고 있어요</p>
     <p class="press">▶ PRESS START ◀</p>
     <div class="bulbs bottom" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
   </header>
 
   <div class="scorebar">
-    <span>GAMES <b>5</b> &nbsp; QUIZ <b>2</b></span>
+    <span>GAMES <b>4</b> &nbsp; QUIZ <b>2</b></span>
     <button type="button" id="sound" aria-pressed="false">SOUND: OFF</button>
   </div>
 
@@ -342,21 +336,6 @@
         </div>
       </article>
 
-      <article class="cab c5">
-        <div class="topper">SHOOTING</div>
-        <div class="screen">
-          <div class="hi"><span>1UP</span><span>HI 9999</span></div>
-          <canvas data-sprite="ship2" width="16" height="16" aria-hidden="true"></canvas>
-        </div>
-        <div class="info">
-          <h3>엔트리 슈팅게임</h3>
-          <p class="maker">만든 사람 <b>남예준</b></p>
-        </div>
-        <div class="controls">
-          <span class="joy" aria-hidden="true"></span>
-          <a class="btn launch" href="https://playentry.org/project/6ad05a6a661ddc50e3718016" target="_blank" rel="noopener">▶ <span class="ko">게임 시작</span></a>
-        </div>
-      </article>
     </div>
   </section>
 
@@ -464,24 +443,6 @@
       '....oo....oo....',
       '....yy....yy....',
       '.....y....y.....'
-    ],
-    ship2: [
-      '.......pp.......',
-      '......pyyp......',
-      '......pyyp......',
-      '.....pyyyyp.....',
-      '.....pyccyp.....',
-      '.b...pyccyp...b.',
-      '.b..ppyyyypp..b.',
-      '.bb.pyyyyyyp.bb.',
-      '.bbppyyyyyyppbb.',
-      'bbbpyyyyyyyypbbb',
-      'bbpyyyppppyyypbb',
-      'bbpyypp..ppyypbb',
-      '.bbpp......ppbb.',
-      '...oo......oo...',
-      '...rr......rr...',
-      '....r......r....'
     ],
     runner: [
       '......oooo......',
