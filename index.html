@@ -129,7 +129,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .zone.quiz .cabinets { max-width: 760px; }
-  @media (min-width: 1000px) { .zone.games .cabinets { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  @media (min-width: 720px) { .zone.games .cabinets { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 560px) { .cabinets { grid-template-columns: minmax(0, 1fr); } }
 
   /* ---------- one cabinet ---------- */
@@ -252,13 +252,13 @@
     <div class="bulbs top" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     <p class="eyebrow">WELCOME TO</p>
     <h1>화명 메타버스</h1>
-    <p class="sub">친구들이 직접 만든 게임 4개와 퀴즈 2개가 기다리고 있어요</p>
+    <p class="sub">친구들이 직접 만든 게임 3개와 퀴즈 2개가 기다리고 있어요</p>
     <p class="press">▶ PRESS START ◀</p>
     <div class="bulbs bottom" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
   </header>
 
   <div class="scorebar">
-    <span>GAMES <b>4</b> &nbsp; QUIZ <b>2</b></span>
+    <span>GAMES <b>3</b> &nbsp; QUIZ <b>2</b></span>
     <button type="button" id="sound" aria-pressed="false">SOUND: OFF</button>
   </div>
 
@@ -285,22 +285,6 @@
         <div class="controls">
           <span class="joy" aria-hidden="true"></span>
           <a class="btn launch" href="https://playentry.org/project/6ad05a95cff3d23af429dc99" target="_blank" rel="noopener">▶ <span class="ko">게임 시작</span></a>
-        </div>
-      </article>
-
-      <article class="cab c2">
-        <div class="topper">OBSTACLE RUN</div>
-        <div class="screen">
-          <div class="hi"><span>1UP</span><span>HI 9999</span></div>
-          <canvas data-sprite="runner" width="16" height="16" aria-hidden="true"></canvas>
-        </div>
-        <div class="info">
-          <h3>장애물 게임</h3>
-          <p class="maker">만든 사람 <b>박건희</b></p>
-        </div>
-        <div class="controls">
-          <span class="joy" aria-hidden="true"></span>
-          <a class="btn launch" href="https://playentry.org/project/6aa7c46e5183a25f173ba882" target="_blank" rel="noopener">▶ <span class="ko">게임 시작</span></a>
         </div>
       </article>
 
@@ -443,24 +427,6 @@
       '....oo....oo....',
       '....yy....yy....',
       '.....y....y.....'
-    ],
-    runner: [
-      '......oooo......',
-      '.....oooooo.....',
-      '.....okkook.....',
-      '.....oooooo.....',
-      '......oooo......',
-      '....ccccccc.....',
-      '...cccccccccc...',
-      '..cc.cccccc.cc..',
-      '..cc.cccccc..cc.',
-      '.....cccccc.....',
-      '.....bbbbbb.....',
-      '....bbb..bbb....',
-      '...bbb....bbb...',
-      '..bbb......bbb..',
-      '..kkk......kkk..',
-      '.kkkk......kkkk.'
     ],
     mystery: [
       '.....gggggg.....',
